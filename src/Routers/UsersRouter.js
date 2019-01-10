@@ -374,9 +374,6 @@ export class UsersRouter extends ClassesRouter {
     if (!config) {
       this.invalidRequest();
     }
-    if (!config.publicServerURL) {
-      return this.missingPublicServerURL();
-    }
 
     const {
       username,
@@ -384,10 +381,24 @@ export class UsersRouter extends ClassesRouter {
       new_password
     } = req.body;
 
-    if (!username || !token || !new_password) {
+    if (!username) {
+      throw new Parse.Error(
+        Parse.Error.USERNAME_MISSING,
+        'Missing username'
+      );
+    }
+
+    if (!token) {
+      throw new Parse.Error(
+        Parse.Error.OPERATION_FORBIDDEN,
+        'Missing token'
+      );
+    }
+
+    if (!new_password) {
       throw new Parse.Error(
         Parse.Error.PASSWORD_MISSING,
-        'Empty password, token or username'
+        'Missing password'
       );
     }
 
