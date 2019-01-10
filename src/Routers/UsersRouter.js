@@ -385,7 +385,10 @@ export class UsersRouter extends ClassesRouter {
     } = req.body;
 
     if (!username || !token || !new_password) {
-      throw new _node.default.Error(_node.default.Error.OPERATION_FORBIDDEN, 'Missing field);
+      throw new Parse.Error(
+        Parse.Error.PASSWORD_MISSING,
+        'Empty password, token or username'
+      );
     }
 
     return config.userController.checkResetTokenValidity(username, token)
@@ -393,16 +396,21 @@ export class UsersRouter extends ClassesRouter {
         return config.userController.updatePassword(username, token, new_password);
       },
       () => {
-        throw new _node.default.Error(_node.default.Error.OPERATION_FORBIDDEN, 'Invalid token');
+        throw new Parse.Error(
+          Parse.Error.OPERATION_FORBIDDEN,
+          'Invalid token'
+        );
       }
       )
       .then(() => {
         return Promise.resolve({
           response: {}
         });
-      }, err => {
-        throw new _node.default.Error(_node.default.Error.OPERATION_FORBIDDEN, 'Password does not meet' +
-          ' Password Policy requirements');
+      }, () => {
+        throw new Parse.Error(
+          Parse.Error.OPERATION_FORBIDDEN,
+          'Password does not meet Password Policy requirements'
+        );
       });
   }
 
