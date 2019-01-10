@@ -385,7 +385,7 @@ export class UsersRouter extends ClassesRouter {
     } = req.body;
 
     if (!username || !token || !new_password) {
-      return this.invalidLink(req);
+      throw new _node.default.Error(_node.default.Error.OPERATION_FORBIDDEN, 'invalid token');
     }
 
     return config.userController.checkResetTokenValidity(username, token)
@@ -393,10 +393,7 @@ export class UsersRouter extends ClassesRouter {
         return config.userController.updatePassword(username, token, new_password);
       },
       () => {
-        throw new Parse.Error(
-          Parse.Error.OPERATION_FORBIDDEN,
-          'invalid token'
-        );
+        throw new _node.default.Error(_node.default.Error.OPERATION_FORBIDDEN, 'invalid token');
       }
       )
       .then(() => {
