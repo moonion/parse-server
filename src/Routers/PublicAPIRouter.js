@@ -159,8 +159,36 @@ export class PublicAPIRouter extends PromiseRouter {
 
     const { username, token, new_password } = req.body;
 
-    if (!username || !token || !new_password) {
+    if ((!username || !token || !new_password) && req.xhr == false) {
       return this.invalidLink(req);
+    }
+
+    if (!username) {
+      // throw new Parse.Error(
+      //   Parse.Error.USERNAME_MISSING,
+      //   'Missing username'
+      // );
+
+      return Promise.reject(
+        new Parse.Error(
+          Parse.Error.USERNAME_MISSING,
+          'Missing username'
+        )
+      );
+    }
+
+    if (!token) {
+      throw new Parse.Error(
+        Parse.Error.OTHER_CAUSE,
+        'Missing token'
+      );
+    }
+
+    if (!new_password) {
+      throw new Parse.Error(
+        Parse.Error.PASSWORD_MISSING,
+        'Missing password'
+      );
     }
 
     return config.userController
@@ -168,12 +196,19 @@ export class PublicAPIRouter extends PromiseRouter {
       .then(
         () => {
           const params = qs.stringify({ username: username });
-          return Promise.resolve({
-            status: 302,
-            location: `${config.passwordResetSuccessURL}?${params}`,
-          });
-        },
-        err => {
+
+          if (req.xhr) {
+            return Promise.resolve({
+              status: 200,
+              response: 'Password successfully reset'
+            });
+          } else {
+            return Promise.resolve({
+              status: 302,
+              location: `${config.passwordResetSuccessURL}?${params}`
+            });
+          }
+        }, err => {
           const params = qs.stringify({
             username: username,
             token: token,
@@ -181,9 +216,20 @@ export class PublicAPIRouter extends PromiseRouter {
             error: err,
             app: config.appName,
           });
-          return Promise.resolve({
-            status: 302,
-            location: `${config.choosePasswordURL}?${params}`,
+
+          if (req.xhr) {
+            return Promise.reject(
+              new Parse.Error(
+                Parse.Error.OTHER_CAUSE,
+                'Server failed to reset password with provided data'
+              )
+            );
+          } else {
+            return Promise.resolve({
+              status: 302,
+              location: `${config.choosePasswordURL}?${params}`
+            });
+          }
           });
         }
       );
