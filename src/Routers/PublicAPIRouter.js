@@ -188,19 +188,19 @@ export class PublicAPIRouter extends PromiseRouter {
       .updatePassword(username, token, new_password)
       .then(
         () => {
-          const params = qs.stringify({ username: username });
+          const params = qs.stringify({username: username});
 
           if (req.xhr) {
             return Promise.resolve({
               status: 200,
               response: 'Password successfully reset'
             });
-          } else {
-            return Promise.resolve({
-              status: 302,
-              location: `${config.passwordResetSuccessURL}?${params}`
-            });
           }
+
+          return Promise.resolve({
+            status: 302,
+            location: `${config.passwordResetSuccessURL}?${params}`
+          });
         }, err => {
           const params = qs.stringify({
             username: username,
