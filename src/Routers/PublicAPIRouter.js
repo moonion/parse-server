@@ -164,16 +164,9 @@ export class PublicAPIRouter extends PromiseRouter {
     }
 
     if (!username) {
-      // throw new Parse.Error(
-      //   Parse.Error.USERNAME_MISSING,
-      //   'Missing username'
-      // );
-
-      return Promise.reject(
-        new Parse.Error(
-          Parse.Error.USERNAME_MISSING,
-          'Missing username'
-        )
+      throw new Parse.Error(
+        Parse.Error.USERNAME_MISSING,
+        'Missing username'
       );
     }
 
@@ -218,12 +211,10 @@ export class PublicAPIRouter extends PromiseRouter {
           });
 
           if (req.xhr) {
-            return Promise.reject(
-              new Parse.Error(
-                Parse.Error.OTHER_CAUSE,
-                'Server failed to reset password with provided data'
-              )
-            );
+            throw new Parse.Error(
+              Parse.Error.OTHER_CAUSE,
+              'Server failed to reset password with provided data'
+            )
           } else {
             return Promise.resolve({
               status: 302,
