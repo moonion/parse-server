@@ -369,62 +369,6 @@ export class UsersRouter extends ClassesRouter {
     );
   }
 
-  handleResetPasswordSetNew(req) {
-    const config = req.config;
-    if (!config) {
-      this.invalidRequest();
-    }
-
-    const {
-      username,
-      token,
-      new_password
-    } = req.body;
-
-    if (!username) {
-      throw new Parse.Error(
-        Parse.Error.USERNAME_MISSING,
-        'Missing username'
-      );
-    }
-
-    if (!token) {
-      throw new Parse.Error(
-        Parse.Error.OPERATION_FORBIDDEN,
-        'Missing token'
-      );
-    }
-
-    if (!new_password) {
-      throw new Parse.Error(
-        Parse.Error.PASSWORD_MISSING,
-        'Missing password'
-      );
-    }
-
-    return config.userController.checkResetTokenValidity(username, token)
-      .then(() => {
-        return config.userController.updatePassword(username, token, new_password);
-      },
-      () => {
-        throw new Parse.Error(
-          Parse.Error.OPERATION_FORBIDDEN,
-          'Invalid token'
-        );
-      }
-      )
-      .then(() => {
-        return Promise.resolve({
-          response: {}
-        });
-      }, () => {
-        throw new Parse.Error(
-          Parse.Error.OPERATION_FORBIDDEN,
-          'Password does not meet Password Policy requirements'
-        );
-      });
-  }
-
   handleVerificationEmailRequest(req) {
     this._throwOnBadEmailConfig(req);
 
@@ -499,9 +443,6 @@ export class UsersRouter extends ClassesRouter {
     });
     this.route('POST', '/requestPasswordReset', req => {
       return this.handleResetRequest(req);
-    });
-    this.route('POST', '/resetPasswordSetNew', req => {
-      return this.handleResetPasswordSetNew(req)
     });
     this.route('POST', '/verificationEmailRequest', req => {
       return this.handleVerificationEmailRequest(req);
