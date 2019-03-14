@@ -152,41 +152,83 @@ export class PublicAPIRouter extends PromiseRouter {
     if (!config) {
       this.invalidRequest();
     }
-
     if (!config.publicServerURL) {
       return this.missingPublicServerURL();
     }
 
-    const { username, token, new_password } = req.body;
+    const {
+      username,
+      token,
+      new_password
+    } = req.body;
 
-    if (!username || !token || !new_password) {
+    if ((!username || !token || !new_password) && req.xhr === false) {
       return this.invalidLink(req);
+    }
+
+    if (!username) {
+      throw new Parse.Error(
+        Parse.Error.USERNAME_MISSING,
+        'Missing username'
+      );
+    }
+
+    if (!token) {
+      throw new Parse.Error(
+        Parse.Error.OTHER_CAUSE,
+        'Missing token'
+      );
+    }
+
+    if (!new_password) {
+      throw new Parse.Error(
+        Parse.Error.PASSWORD_MISSING,
+        'Missing password'
+      );
     }
 
     return config.userController
       .updatePassword(username, token, new_password)
       .then(
         () => {
-          const params = qs.stringify({ username: username });
           return Promise.resolve({
-            status: 302,
-            location: `${config.passwordResetSuccessURL}?${params}`,
+            success: true
           });
-        },
-        err => {
-          const params = qs.stringify({
-            username: username,
-            token: token,
-            id: config.applicationId,
-            error: err,
-            app: config.appName,
-          });
+
+        }, err => {
           return Promise.resolve({
-            status: 302,
-            location: `${config.choosePasswordURL}?${params}`,
+            success: false,
+            err
           });
+        })
+      .then(result => {
+        const params = _querystring.default.stringify({
+          username: username,
+          token: token,
+          id: config.applicationId,
+          error: result.err,
+          app: config.appName
+        });
+
+        if (req.xhr) {
+          if (result.success) {
+            return Promise.resolve({
+              status: 200,
+              response: 'Password successfully reset'
+            })
+          }
+
+          throw new Parse.Error(
+            Parse.Error.OTHER_CAUSE,
+            result.err
+          )
         }
-      );
+
+        return Promise.resolve({
+          status: 302,
+          location: `${result.success ? config.passwordResetSuccessURL : config.choosePasswordURL}?${params}`,
+        });
+      });
   }
 
   invalidLink(req) {
